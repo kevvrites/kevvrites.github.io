@@ -1,0 +1,3 @@
+[submodule "random-pelican"]
+	path = random-pelican
+	url = https://github.com/kevvrites/randompelican.git
