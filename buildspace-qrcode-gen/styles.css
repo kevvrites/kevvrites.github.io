@@ -1,0 +1,171 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background-color: #f5f5f5;
+}
+
+.container {
+  max-width: 400px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+.hide-container {
+  visibility: hidden;
+  height: 0;
+  opacity: 0;
+  transition: visibility 0s, height 0.5s, opacity 0.5s;
+}
+
+h1 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+input[type="text"] {
+  width: 80%;
+  padding: 8px;
+  margin-bottom: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+#outputContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #fff;
+  margin: 20px auto 10px auto;
+  padding: 50px 20px 20px;
+}
+
+#outputContainer h2,
+#outputContainer p {
+  color: #000;
+  margin: 0;
+}
+
+#outputContainer img {
+  margin-top: 20px;
+  max-width: 200px;
+}
+
+#qrCodeContainer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+#textContainer {
+  margin-top: 10px;
+}
+
+#colorButtonsContainer {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.colorButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+.colorButton:nth-child(1) {
+  background-color: #ff0000;
+}
+
+.colorButton:nth-child(2) {
+  background-color: #0080fe;
+}
+
+.colorButton:nth-child(3) {
+  background-color: #ffbe00;
+}
+
+.colorButton:nth-child(4) {
+  background-color: #02ff0e;
+}
+
+@media (max-width: 768px) {
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .container {
+    max-width: 400px;
+    padding: 20px;
+    width: 90%;
+    margin: 0 5px;
+  }
+  
+  .hide-container {
+    visibility: hidden;
+    height: 0;
+    opacity: 0;
+    transition: visibility 0s, height 0.5s, opacity 0.5s;
+  }
+  
+  h1 {
+    font-size: 24px;
+    margin-bottom: 16px;
+  }
+  
+  input[type="text"] {
+    width: 95%;
+    margin-bottom: 12px;
+  }
+  
+  button {
+    margin-top: 16px;
+  }
+  
+  #outputContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    background-color: #fff;
+    margin: 20px auto 10px auto;
+    padding: 50px 20px 20px;
+  }
+  
+  #outputContainer img {
+    margin-top: 20px;
+    max-width: 200px;
+    width: 100%;
+  }
+}
