@@ -6,32 +6,37 @@
     <title>Pong - Kevin Liu</title>
     <link rel="stylesheet" href="/assets/css/styles.css">
     <style>
-        /* Game-specific styles */
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevents scrolling */
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
         .game-container {
-            background: var(--bg-color);
-            padding: 2rem 0;
-            margin: 2rem 0;
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 0; /* Prevents flex item from overflowing */
         }
 
         canvas {
             display: block;
-            background: #3f72af; /* Keeping your original game background */
+            background: #3f72af;
             border-radius: 4px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        @media (max-width: 768px) {
-            .game-container {
-                padding: 1rem 0;
-            }
-            
-            canvas {
-                max-width: 100%;
-                height: auto;
-            }
+        /* Ensure header and footer don't cause overflow */
+        .header, .footer {
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -48,7 +53,6 @@
                     <a href="/about">About</a>
                 </nav>
             </div>
-            <button class="theme-toggle" aria-label="Toggle dark mode">Toggle theme</button>
         </header>
 
         <main>
@@ -65,8 +69,14 @@
 
     <script>
         var Module = { canvas: document.getElementById("canvas") };
+        
+        // Prevent arrow key scrolling
+        window.addEventListener("keydown", function(e) {
+            if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+                e.preventDefault();
+            }
+        }, false);
     </script>
     <script async src="pong.js"></script>
-    <script src="/assets/js/theme.js"></script>
 </body>
 </html>
