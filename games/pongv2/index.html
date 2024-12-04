@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong - Kevin Liu</title>
+    <link rel="stylesheet" href="/assets/css/styles.css">
+    <style>
+        /* Game-specific styles */
+        .game-container {
+            background: var(--bg-color);
+            padding: 2rem 0;
+            margin: 2rem 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            background: #3f72af; /* Keeping your original game background */
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1rem 0;
+            }
+            
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div>
+                <h1>Kevin Liu</h1>
+                <nav>
+                    <a href="/">Home</a>
+                    <a href="/essays">Essays</a>
+                    <a href="/engineering">Engineering</a>
+                    <a href="/games">Games</a>
+                    <a href="/about">About</a>
+                </nav>
+            </div>
+            <button class="theme-toggle" aria-label="Toggle dark mode">Toggle theme</button>
+        </header>
+
+        <main>
+            <h2>Pong</h2>
+            <div class="game-container">
+                <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+            </div>
+        </main>
+
+        <footer class="footer">
+            © 2024 Kevin Liu. All rights reserved.
+        </footer>
+    </div>
+
+    <script>
+        var Module = { canvas: document.getElementById("canvas") };
+    </script>
+    <script async src="pong.js"></script>
+    <script src="/assets/js/theme.js"></script>
+</body>
+</html>
