@@ -1,3 +1,0 @@
-[submodule "games/pong"]
-    path = games/pong
-    url = https://github.com/kevvrites/pong.git
