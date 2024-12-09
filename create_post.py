@@ -13,61 +13,99 @@ def slugify(value):
     return re.sub(r'[-\s]+', '-', value)
 
 def text_to_html(content):
-    """Convert text content to HTML paragraphs."""
-    paragraphs = content.split('\n\n')
+    """Convert text content to HTML paragraphs with flexible signoff detection."""
+    # Split content into lines first
+    lines = content.strip().split('\n')
+    
+    # Look for common signoff patterns near the end
+    signoff_patterns = [
+        'See ya!',
+        'Until next time',
+        'Best',
+        'Sincerely',
+        'Cheers',
+        '-',
+        '—'  # em dash
+    ]
+    
+    # Find potential signoff starting position
+    signoff_start = -1
+    for i in range(len(lines) - 3, len(lines)):  # Check last few lines
+        if i >= 0:  # Make sure index is valid
+            line = lines[i].strip()
+            if any(line.startswith(pattern) for pattern in signoff_patterns) or (
+                len(line) < 30 and any(name in line.lower() for name in ['kevin', 'kev'])):
+                signoff_start = i
+                break
+    
     html_parts = []
     
-    for para in paragraphs:
-        if para.strip():
-            # Check if it's a heading (starts with # like Markdown)
-            if para.startswith('# '):
-                html_parts.append(f'<h3>{para[2:].strip()}</h3>')
-            else:
-                html_parts.append(f'<p>{para.strip()}</p>')
+    # If we found a signoff, process the content in two parts
+    if signoff_start != -1:
+        # Process main content
+        main_content = '\n'.join(lines[:signoff_start])
+        for para in main_content.split('\n\n'):
+            if para.strip():
+                if para.startswith('# '):
+                    html_parts.append(f'<h3>{para[2:].strip()}</h3>')
+                else:
+                    html_parts.append(f'<p>{para.strip()}</p>')
+        
+        # Process signoff - keep all remaining lines
+        signoff = '<br>'.join(line.strip() for line in lines[signoff_start:] if line.strip())
+        html_parts.append(f'<p class="signoff">{signoff}</p>')
+    else:
+        # No signoff detected, process everything normally
+        for para in content.split('\n\n'):
+            if para.strip():
+                if para.startswith('# '):
+                    html_parts.append(f'<h3>{para[2:].strip()}</h3>')
+                else:
+                    html_parts.append(f'<p>{para.strip()}</p>')
     
     return '\n'.join(html_parts)
 
 def update_essays_index(title, date, post_path):
     """Add new post to essays/index.html."""
-    essays_index = Path('essays/index.html')
+    index_path = Path('essays/index.html')
     year = date.strftime('%Y')
     
-    # Read current index
-    with open(essays_index, 'r') as f:
-        content = f.read()
-    
     # Create backup
-    shutil.copy(essays_index, essays_index.with_suffix('.html.bak'))
+    shutil.copy(index_path, index_path.with_suffix('.html.bak'))
     
-    # Find the year section or create new one
-    year_section_match = re.search(f'<section class="year-section">\s*<h3>{year}</h3>', content)
+    with open(index_path, 'r') as f:
+        content = f.read()
+
+    # Find year section
+    year_section = re.search(f'<section class="year-section">\s*<h3>{year}</h3>\s*<div class="post-list">', content)
     
     new_post_html = f'''
                 <article class="post-preview">
                     <time datetime="{date.strftime('%Y-%m-%d')}">{date.strftime('%B %d, %Y')}</time>
-                    <h4><a href="/{post_path}">{title}</a></h4>
+                    <h4><a href="/essays/posts/{year}/{slugify(title)}">{title}</a></h4>
                 </article>'''
-    
-    if year_section_match:
-        # Add post to existing year
-        insert_pos = year_section_match.end()
+
+    if year_section:
+        # Add to existing year section
+        insert_pos = year_section.end()
         content = content[:insert_pos] + new_post_html + content[insert_pos:]
     else:
         # Create new year section
-        new_year_section = f'''
+        new_section = f'''
             <section class="year-section">
                 <h3>{year}</h3>
-                <div class="post-list">{new_post_html}
+                <div class="post-list">
+                    {new_post_html}
                 </div>
             </section>'''
         
-        # Find the main tag and insert after it
-        main_tag_pos = content.find('<main>')
-        if main_tag_pos != -1:
-            content = content[:main_tag_pos+6] + new_year_section + content[main_tag_pos+6:]
+        # Find the main tag and insert after the Essays heading
+        essays_heading = re.search(r'<h2>Essays</h2>', content)
+        if essays_heading:
+            insert_pos = essays_heading.end()
+            content = content[:insert_pos] + new_section + content[insert_pos:]
     
-    # Save updated index
-    with open(essays_index, 'w') as f:
+    with open(index_path, 'w') as f:
         f.write(content)
 
 def main():
@@ -77,10 +115,10 @@ def main():
     
     txt_path = Path(sys.argv[1])
     
-    # Use filename as title (remove .txt extension and convert hyphens to spaces)
+    # Use filename as title (remove .txt extension)
     title = txt_path.stem.replace('-', ' ').title()
     
-    # Read all content from file
+    # Read content
     with open(txt_path, 'r') as f:
         content = text_to_html(f.read().strip())
     
@@ -92,7 +130,7 @@ def main():
     post_dir = Path(f'essays/posts/{year}/{slug}')
     post_dir.mkdir(parents=True, exist_ok=True)
     
-    # Generate and save post HTML
+    # Generate post HTML
     post_html = f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,11 +183,10 @@ def main():
         f.write(post_html)
     
     # Update essays index
-    relative_path = f'essays/posts/{year}/{slug}'
-    update_essays_index(title, date, relative_path)
+    update_essays_index(title, date, post_dir)
     
     print(f"\nPost created successfully!")
-    print(f"- Post URL: {relative_path}")
+    print(f"- Post URL: {post_dir}")
     print(f"- Title: {title}")
     print(f"- Date: {date.strftime('%B %d, %Y')}")
     print("\nCheck both files to ensure everything looks correct:")
