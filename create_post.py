@@ -1,10 +1,24 @@
 #!/usr/bin/env python3
 import sys
-from datetime import datetime
+from datetime import datetime, date
 from pathlib import Path
 import re
 import unicodedata
 import shutil
+
+def get_post_date(post_dir):
+    """Get post date from date.txt if it exists, otherwise use current date."""
+    date_file = post_dir / 'date.txt'
+    if date_file.exists():
+        with open(date_file, 'r') as f:
+            date_str = f.read().strip()
+            try:
+                # Expect format like "2024-12-08"
+                return datetime.strptime(date_str, '%Y-%m-%d')
+            except ValueError:
+                print(f"Warning: Invalid date format in date.txt, using current date")
+                return datetime.now()
+    return datetime.now()
 
 def slugify(value):
     """Convert a string into a URL-friendly slug."""
@@ -44,24 +58,26 @@ def text_to_html(content):
     if signoff_start != -1:
         # Process main content
         main_content = '\n'.join(lines[:signoff_start])
-        for para in main_content.split('\n\n'):
-            if para.strip():
+        paragraphs = [p.strip() for p in main_content.split('\n\n')]
+        for para in paragraphs:
+            if para:
                 if para.startswith('# '):
                     html_parts.append(f'<h3>{para[2:].strip()}</h3>')
                 else:
-                    html_parts.append(f'<p>{para.strip()}</p>')
+                    html_parts.append(f'<p>{para}</p>')
         
         # Process signoff - keep all remaining lines
         signoff = '<br>'.join(line.strip() for line in lines[signoff_start:] if line.strip())
         html_parts.append(f'<p class="signoff">{signoff}</p>')
     else:
         # No signoff detected, process everything normally
-        for para in content.split('\n\n'):
-            if para.strip():
+        paragraphs = [p.strip() for p in content.split('\n\n')]
+        for para in paragraphs:
+            if para:
                 if para.startswith('# '):
                     html_parts.append(f'<h3>{para[2:].strip()}</h3>')
                 else:
-                    html_parts.append(f'<p>{para.strip()}</p>')
+                    html_parts.append(f'<p>{para}</p>')
     
     return '\n'.join(html_parts)
 
@@ -108,30 +124,9 @@ def update_essays_index(title, date, post_path):
     with open(index_path, 'w') as f:
         f.write(content)
 
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: python create_post.py <text_file>")
-        sys.exit(1)
-    
-    txt_path = Path(sys.argv[1])
-    
-    # Use filename as title (remove .txt extension)
-    title = txt_path.stem.replace('-', ' ').title()
-    
-    # Read content
-    with open(txt_path, 'r') as f:
-        content = text_to_html(f.read().strip())
-    
-    date = datetime.now()
-    
-    # Create directory structure
-    year = date.strftime('%Y')
-    slug = slugify(title)
-    post_dir = Path(f'essays/posts/{year}/{slug}')
-    post_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Generate post HTML
-    post_html = f'''<!DOCTYPE html>
+def generate_post_html(title, content, date):
+    """Generate the HTML for a post."""
+    return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -178,20 +173,82 @@ def main():
 </body>
 </html>'''
 
-    # Save post
+def update_or_create_post(source_path, is_update=False):
+    """Create a new post or update an existing one."""
+    title = source_path.parent.name.replace('-', ' ').title()
+    post_dir = source_path.parent
+    date = get_post_date(post_dir)
+    
+    # Read new content
+    with open(source_path, 'r') as f:
+        new_content = f.read().strip()
+    
+    if is_update:
+        # Check if content has changed
+        html_path = post_dir / 'index.html'
+        with open(html_path, 'r') as f:
+            current_content = f.read()
+            
+        # Convert new content to HTML
+        new_html = generate_post_html(title, text_to_html(new_content), date)
+        
+        if current_content == new_html:
+            # No changes detected
+            return post_dir, date, False
+    
+    # Either new post or content has changed
+    # Convert content to HTML and save
+    html_content = text_to_html(new_content)
+    post_html = generate_post_html(title, html_content, date)
     with open(post_dir / 'index.html', 'w') as f:
         f.write(post_html)
     
-    # Update essays index
-    update_essays_index(title, date, post_dir)
+    if not is_update:
+        # Only update index for new posts
+        update_essays_index(title, date, post_dir)
     
-    print(f"\nPost created successfully!")
+    return post_dir, date, True
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python create_post.py <year/post-name>")
+        print("Example: python create_post.py 2024/a-new-start")
+        sys.exit(1)
+    
+    # Get year and post directory from argument
+    post_path = sys.argv[1].rstrip('/')
+    year, post_name = post_path.split('/')
+    
+    # Construct full directory path and source.txt path
+    post_dir = Path(f'essays/posts/{year}/{post_name}')
+    source_path = post_dir / 'source.txt'
+    
+    if not source_path.exists():
+        print(f"Error: source.txt not found in {post_dir}")
+        print(f"Please ensure source.txt is in the directory.")
+        sys.exit(1)
+    
+    # Check if this is a new post or update
+    is_update = (post_dir / 'index.html').exists()
+    
+    # Process the post
+    post_dir, post_date, was_changed = update_or_create_post(source_path, is_update)
+    
+    if is_update:
+        if was_changed:
+            print(f"\nPost updated successfully!")
+        else:
+            print(f"\nNo changes detected, post remains the same.")
+    else:
+        print(f"\nPost created successfully!")
+    
     print(f"- Post URL: {post_dir}")
-    print(f"- Title: {title}")
-    print(f"- Date: {date.strftime('%B %d, %Y')}")
-    print("\nCheck both files to ensure everything looks correct:")
-    print(f"1. {post_dir}/index.html")
-    print("2. essays/index.html")
+    print(f"- Title: {post_name.replace('-', ' ').title()}")
+    print(f"- Date: {post_date.strftime('%B %d, %Y')}")
+    print("\nFiles:")
+    print(f"1. {post_dir}/index.html (HTML version)")
+    print(f"2. {source_path} (Source file)")
+    print(f"3. {post_dir}/date.txt (Date override - optional)")
 
 if __name__ == '__main__':
     main()
