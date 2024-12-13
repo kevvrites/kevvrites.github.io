@@ -42,13 +42,6 @@
                     <h4><a href="/essays/posts/2024/my-first-post">My First Post</a></h4>
                 </article>
                 
-                
-                    <article class="post-preview">
-                        <time datetime="2024-03-12">March 12, 2024</time>
-                        <h4><a href="/essays/posts/2024/example-post/">Example Post Title</a></h4>
-                        <p>Brief description or excerpt of the post would go here...</p>
-                    </article>
-                    <!-- More 2024 posts would go here -->
                 </div>
             </section>
 

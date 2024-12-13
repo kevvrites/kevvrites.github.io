@@ -57,30 +57,28 @@ def text_to_html(content):
     # If we found a signoff, process the content in two parts
     if signoff_start != -1:
         # Process main content
-        main_content = '\n'.join(lines[:signoff_start])
-        paragraphs = [p.strip() for p in main_content.split('\n\n')]
-        for para in paragraphs:
-            if para:
-                if para.startswith('# '):
-                    html_parts.append(f'<h3>{para[2:].strip()}</h3>')
+        main_lines = lines[:signoff_start]
+        for line in main_lines:
+            if line.strip():
+                if line.strip().startswith('# '):
+                    html_parts.append(f'<h3>{line.strip()[2:].strip()}</h3>')
                 else:
-                    html_parts.append(f'<p>{para}</p>')
+                    html_parts.append(f'<p>{line.strip()}</p>')
         
         # Process signoff - keep all remaining lines
         signoff = '<br>'.join(line.strip() for line in lines[signoff_start:] if line.strip())
         html_parts.append(f'<p class="signoff">{signoff}</p>')
     else:
         # No signoff detected, process everything normally
-        paragraphs = [p.strip() for p in content.split('\n\n')]
-        for para in paragraphs:
-            if para:
-                if para.startswith('# '):
-                    html_parts.append(f'<h3>{para[2:].strip()}</h3>')
+        for line in lines:
+            if line.strip():
+                if line.strip().startswith('# '):
+                    html_parts.append(f'<h3>{line.strip()[2:].strip()}</h3>')
                 else:
-                    html_parts.append(f'<p>{para}</p>')
+                    html_parts.append(f'<p>{line.strip()}</p>')
     
     return '\n'.join(html_parts)
-
+    
 def update_essays_index(title, date, post_path):
     """Add new post to essays/index.html."""
     index_path = Path('essays/index.html')
